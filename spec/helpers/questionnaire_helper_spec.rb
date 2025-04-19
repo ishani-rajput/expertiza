@@ -203,4 +203,70 @@ RSpec.describe QuestionnaireHelper, type: :helper do
     }.to raise_error(NoMethodError) # or you can handle it inside the method if needed
   end
 end
+
+describe '#questionnaire_factory' do
+  before do
+    extend QuestionnaireHelper
+  end
+
+  it 'returns the correct questionnaire instance for a valid type' do
+    instance = questionnaire_factory('ReviewQuestionnaire')
+    expect(instance).to be_a(ReviewQuestionnaire)
+  end
+
+  it 'sets flash error and returns nil for an invalid type' do
+    flash_hash = {}
+    allow(self).to receive(:flash).and_return(flash_hash)
+
+    result = questionnaire_factory('InvalidType')
+    expect(result).to be_nil
+    expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
+  end
+
+  it 'handles nil or empty type string' do
+    flash_hash = {}
+    allow(self).to receive(:flash).and_return(flash_hash)
+
+    result = questionnaire_factory(nil)
+    expect(result).to be_nil
+    expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
+  end
+end
+
+it 'returns nil and sets error if type string is downcased or malformed' do
+  flash_hash = {}
+  allow(self).to receive(:flash).and_return(flash_hash)
+
+  result = questionnaire_factory('reviewquestionnaire')
+  expect(result).to be_nil
+  expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
+
+  result = questionnaire_factory(' ReviewQuestionnaire ')
+  expect(result).to be_nil
+  expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
+end
+
+it 'returns nil and sets error when QUESTIONNAIRE_MAP is empty' do
+  stub_const("QuestionnaireHelper::QUESTIONNAIRE_MAP", {})
+
+  flash_hash = {}
+  allow(self).to receive(:flash).and_return(flash_hash)
+
+  result = questionnaire_factory('ReviewQuestionnaire')
+  expect(result).to be_nil
+  expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
+end
+
+it 'returns nil and sets error when type is mapped to nil' do
+  stub_const("QuestionnaireHelper::QUESTIONNAIRE_MAP", {
+    'InvalidQuestionnaire' => nil
+  })
+
+  flash_hash = {}
+  allow(self).to receive(:flash).and_return(flash_hash)
+
+  result = questionnaire_factory('InvalidQuestionnaire')
+  expect(result).to be_nil
+  expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
+end
 end
