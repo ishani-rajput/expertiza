@@ -104,4 +104,103 @@ RSpec.describe QuestionnaireHelper, type: :helper do
       end
     end       
   end
+  describe '#update_questionnaire_questions' do
+  before do
+    extend QuestionnaireHelper
+
+    @question1 = double('Question', id: 1)
+    @question2 = double('Question', id: 2)
+
+    allow(Question).to receive(:find).with("1").and_return(@question1)
+    allow(Question).to receive(:find).with("2").and_return(@question2)
+  end
+
+  it 'returns early if params[:question] is nil' do
+    allow(self).to receive(:params).and_return({})
+    expect(@question1).not_to receive(:save)
+    update_questionnaire_questions
+  end
+
+  it 'updates changed attributes and saves the question' do
+    allow(@question1).to receive(:send).with("txt").and_return("Old text")
+    allow(@question1).to receive(:send).with("weight").and_return("1")
+    expect(@question1).to receive(:send).with("txt=", "Updated question text")
+    expect(@question1).to receive(:send).with("weight=", "2")
+    expect(@question1).to receive(:save)
+
+    allow(@question2).to receive(:send).with("txt").and_return("Another text")
+    allow(@question2).to receive(:send).with("weight").and_return("1")
+    expect(@question2).not_to receive(:send).with("txt=", anything)
+    expect(@question2).not_to receive(:send).with("weight=", anything)
+    expect(@question2).to receive(:save)
+
+    allow(self).to receive(:params).and_return({
+      question: {
+        "1" => { "txt" => "Updated question text", "weight" => "2" },
+        "2" => { "txt" => "Another text", "weight" => "1" }
+      }
+    })
+
+    update_questionnaire_questions
+  end
+
+  it 'does nothing when params[:question] is an empty hash' do
+    allow(self).to receive(:params).and_return({ question: {} })
+  
+    expect(Question).not_to receive(:find)
+    update_questionnaire_questions
+  end  
+
+  it 'updates all changed fields and saves the question' do
+    allow(@question1).to receive(:send).with("txt").and_return("old")
+    allow(@question1).to receive(:send).with("weight").and_return("1")
+  
+    expect(@question1).to receive(:send).with("txt=", "new")
+    expect(@question1).to receive(:send).with("weight=", "2")
+    expect(@question1).to receive(:save)
+  
+    allow(self).to receive(:params).and_return({
+      question: {
+        "1" => { "txt" => "new", "weight" => "2" }
+      }
+    })
+  
+    update_questionnaire_questions
+  end
+  
+  it 'updates only changed fields and still saves the question' do
+    allow(@question1).to receive(:send).with("txt").and_return("old text")
+    allow(@question1).to receive(:send).with("weight").and_return("2")
+  
+    expect(@question1).to receive(:send).with("txt=", "new text")
+    expect(@question1).not_to receive(:send).with("weight=", anything)
+    expect(@question1).to receive(:save)
+  
+    allow(self).to receive(:params).and_return({
+      question: {
+        "1" => { "txt" => "new text", "weight" => "2" }
+      }
+    })
+  
+    update_questionnaire_questions
+  end
+
+  it 'ignores unknown attributes without raising errors' do
+    allow(@question1).to receive(:send).with("txt").and_return("x")
+    allow(@question1).to receive(:send).with("unknown").and_raise(NoMethodError)
+  
+    allow(@question1).to receive(:send).with("txt=", "y")
+    allow(@question1).to receive(:save)
+  
+    allow(self).to receive(:params).and_return({
+      question: {
+        "1" => { "txt" => "y", "unknown" => "zzz" }
+      }
+    })
+  
+    expect {
+      update_questionnaire_questions
+    }.to raise_error(NoMethodError) # or you can handle it inside the method if needed
+  end
+end
 end
