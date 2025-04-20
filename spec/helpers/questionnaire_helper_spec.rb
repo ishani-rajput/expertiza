@@ -108,8 +108,36 @@ RSpec.describe QuestionnaireHelper, type: :helper do
     
         QuestionnaireHelper.adjust_advice_size(questionnaire, question)
       end
+    end
+
+    context 'when question has advice entries with invalid scores' do
+      it 'deletes advice entries with scores outside the valid range' do
+        # Verifies that advice entries with invalid scores are deleted.
+        invalid_advice = double('QuestionAdvice')
+        allow(QuestionAdvice).to receive(:where).and_return([invalid_advice])
+        expect(QuestionAdvice).to receive(:delete).with(
+          ['question_id = ? AND (score > ? OR score < ?)', question.id, 3, 1]
+        )
+
+        QuestionnaireHelper.adjust_advice_size(questionnaire, question)
+      end
+    end
+
+    context 'when question has no advice and score range is empty' do
+      it 'attempts to delete advice entries but does not create new ones' do
+        # Verifies that the method attempts to delete advice entries even when the score range is empty.
+        questionnaire = double('Questionnaire', min_question_score: 3, max_question_score: 1)
+        expect(QuestionAdvice).to receive(:delete).with(
+          ['question_id = ? AND (score > ? OR score < ?)', question.id, 1, 3]
+        )
+        expect(QuestionAdvice).not_to receive(:where)
+        expect(question.question_advices).to be_empty
+
+        QuestionnaireHelper.adjust_advice_size(questionnaire, question)
+      end
     end       
   end
+
   describe '#update_questionnaire_questions' do
   before do
     extend QuestionnaireHelper
