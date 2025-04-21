@@ -1,8 +1,17 @@
+# spec/helpers/questionnaire_helper_spec.rb
+
+# This file contains unit tests for the QuestionnaireHelper module.
+# It ensures that the `get_formatted_question_text` helper method behaves correctly
+# when provided with a mock QuestionnaireQuestion object.
+
 require 'rails_helper'
 
+# Begin a test suite for the QuestionnaireHelper module.
+# The `type: :helper` metadata ensures we get access to `helper` which includes all the helper methods.
 RSpec.describe QuestionnaireHelper, type: :helper do
   require 'rails_helper'
 
+  # Group tests related to the `get_formatted_question_text` method.
   describe '.adjust_advice_size' do
     let(:questionnaire) { double('Questionnaire', min_question_score: 1, max_question_score: 3) }
     let(:question) { double('ScoredQuestion', id: 101, question_advices: []) }
