@@ -258,6 +258,22 @@ RSpec.describe QuestionnaireHelper, type: :helper do
 
       update_questionnaire_questions
     end
+    it 'handles empty attributes for a question gracefully' do
+      # Verifies that empty attributes for a question do not cause failures.
+      allow(@question1).to receive(:send).with("txt").and_return("Existing text")
+      allow(@question1).to receive(:send).with("weight").and_return("1")
+      expect(@question1).not_to receive(:send).with("txt=", anything)
+      expect(@question1).not_to receive(:send).with("weight=", anything)
+      expect(@question1).to receive(:save)
+
+      allow(self).to receive(:params).and_return({
+        question: {
+          "1" => {}  # No attributes to update
+        }
+      })
+
+      update_questionnaire_questions
+    end
   end
 
   describe '#questionnaire_factory' do
