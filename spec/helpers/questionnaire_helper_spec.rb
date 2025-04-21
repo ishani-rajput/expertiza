@@ -330,5 +330,15 @@ RSpec.describe QuestionnaireHelper, type: :helper do
       expect(result).to be_nil
       expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
     end
+
+    it 'returns nil and sets error when type is a valid string but not in QUESTIONNAIRE_MAP' do
+      # Verifies that a valid string not present in QUESTIONNAIRE_MAP results in an error.
+      flash_hash = {}
+      allow(self).to receive(:flash).and_return(flash_hash)
+
+      result = questionnaire_factory('NonExistentQuestionnaire')
+      expect(result).to be_nil
+      expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
+    end
   end
 end
