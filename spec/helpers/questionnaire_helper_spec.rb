@@ -139,180 +139,196 @@ RSpec.describe QuestionnaireHelper, type: :helper do
   end
 
   describe '#update_questionnaire_questions' do
-  before do
-    extend QuestionnaireHelper
+    before do
+      extend QuestionnaireHelper
 
-    @question1 = double('Question', id: 1)
-    @question2 = double('Question', id: 2)
+      @question1 = double('Question', id: 1)
+      @question2 = double('Question', id: 2)
 
-    allow(Question).to receive(:find).with("1").and_return(@question1)
-    allow(Question).to receive(:find).with("2").and_return(@question2)
-  end
+      allow(Question).to receive(:find).with("1").and_return(@question1)
+      allow(Question).to receive(:find).with("2").and_return(@question2)
+    end
 
-  it 'returns early if params[:question] is nil' do
-    # Ensures method exits early when no questions are provided.
-    allow(self).to receive(:params).and_return({})
-    expect(@question1).not_to receive(:save)
-    update_questionnaire_questions
-  end
-
-  it 'updates changed attributes and saves the question' do
-    # Verifies only changed attributes are updated and saved.
-    allow(@question1).to receive(:send).with("txt").and_return("Old text")
-    allow(@question1).to receive(:send).with("weight").and_return("1")
-    expect(@question1).to receive(:send).with("txt=", "Updated question text")
-    expect(@question1).to receive(:send).with("weight=", "2")
-    expect(@question1).to receive(:save)
-
-    allow(@question2).to receive(:send).with("txt").and_return("Another text")
-    allow(@question2).to receive(:send).with("weight").and_return("1")
-    expect(@question2).not_to receive(:send).with("txt=", anything)
-    expect(@question2).not_to receive(:send).with("weight=", anything)
-    expect(@question2).to receive(:save)
-
-    allow(self).to receive(:params).and_return({
-      question: {
-        "1" => { "txt" => "Updated question text", "weight" => "2" },
-        "2" => { "txt" => "Another text", "weight" => "1" }
-      }
-    })
-
-    update_questionnaire_questions
-  end
-
-  it 'does nothing when params[:question] is an empty hash' do
-    # Confirms no operations are performed for empty question params.
-    allow(self).to receive(:params).and_return({ question: {} })
-  
-    expect(Question).not_to receive(:find)
-    update_questionnaire_questions
-  end  
-
-  it 'updates all changed fields and saves the question' do
-    # Ensures all changed fields are updated and saved.
-    allow(@question1).to receive(:send).with("txt").and_return("old")
-    allow(@question1).to receive(:send).with("weight").and_return("1")
-  
-    expect(@question1).to receive(:send).with("txt=", "new")
-    expect(@question1).to receive(:send).with("weight=", "2")
-    expect(@question1).to receive(:save)
-  
-    allow(self).to receive(:params).and_return({
-      question: {
-        "1" => { "txt" => "new", "weight" => "2" }
-      }
-    })
-  
-    update_questionnaire_questions
-  end
-  
-  it 'updates only changed fields and still saves the question' do
-    # Verifies only changed fields are updated, but the question is saved.
-    allow(@question1).to receive(:send).with("txt").and_return("old text")
-    allow(@question1).to receive(:send).with("weight").and_return("2")
-  
-    expect(@question1).to receive(:send).with("txt=", "new text")
-    expect(@question1).not_to receive(:send).with("weight=", anything)
-    expect(@question1).to receive(:save)
-
-    allow(self).to receive(:params).and_return({
-      question: {
-        "1" => { "txt" => "new text", "weight" => "2" }
-      }
-    })
-  
-    update_questionnaire_questions
-  end
-
-  it 'ignores unknown attributes without raising errors' do
-    # Confirms unknown attributes are ignored without errors.
-    allow(@question1).to receive(:send).with("txt").and_return("x")
-    allow(@question1).to receive(:send).with("unknown").and_raise(NoMethodError)
-  
-    allow(@question1).to receive(:send).with("txt=", "y")
-    allow(@question1).to receive(:save)
-  
-    allow(self).to receive(:params).and_return({
-      question: {
-        "1" => { "txt" => "y", "unknown" => "zzz" }
-      }
-    })
-  
-    expect {
+    it 'returns early if params[:question] is nil' do
+      # Ensures method exits early when no questions are provided.
+      allow(self).to receive(:params).and_return({})
+      expect(@question1).not_to receive(:save)
       update_questionnaire_questions
-    }.to raise_error(NoMethodError) # or you can handle it inside the method if needed
+    end
+
+    it 'updates changed attributes and saves the question' do
+      # Verifies only changed attributes are updated and saved.
+      allow(@question1).to receive(:send).with("txt").and_return("Old text")
+      allow(@question1).to receive(:send).with("weight").and_return("1")
+      expect(@question1).to receive(:send).with("txt=", "Updated question text")
+      expect(@question1).to receive(:send).with("weight=", "2")
+      expect(@question1).to receive(:save)
+
+      allow(@question2).to receive(:send).with("txt").and_return("Another text")
+      allow(@question2).to receive(:send).with("weight").and_return("1")
+      expect(@question2).not_to receive(:send).with("txt=", anything)
+      expect(@question2).not_to receive(:send).with("weight=", anything)
+      expect(@question2).to receive(:save)
+
+      allow(self).to receive(:params).and_return({
+        question: {
+          "1" => { "txt" => "Updated question text", "weight" => "2" },
+          "2" => { "txt" => "Another text", "weight" => "1" }
+        }
+      })
+
+      update_questionnaire_questions
+    end
+
+    it 'does nothing when params[:question] is an empty hash' do
+      # Confirms no operations are performed for empty question params.
+      allow(self).to receive(:params).and_return({ question: {} })
+    
+      expect(Question).not_to receive(:find)
+      update_questionnaire_questions
+    end  
+
+    it 'updates all changed fields and saves the question' do
+      # Ensures all changed fields are updated and saved.
+      allow(@question1).to receive(:send).with("txt").and_return("old")
+      allow(@question1).to receive(:send).with("weight").and_return("1")
+    
+      expect(@question1).to receive(:send).with("txt=", "new")
+      expect(@question1).to receive(:send).with("weight=", "2")
+      expect(@question1).to receive(:save)
+    
+      allow(self).to receive(:params).and_return({
+        question: {
+          "1" => { "txt" => "new", "weight" => "2" }
+        }
+      })
+    
+      update_questionnaire_questions
+    end
+    
+    it 'updates only changed fields and still saves the question' do
+      # Verifies only changed fields are updated, but the question is saved.
+      allow(@question1).to receive(:send).with("txt").and_return("old text")
+      allow(@question1).to receive(:send).with("weight").and_return("2")
+    
+      expect(@question1).to receive(:send).with("txt=", "new text")
+      expect(@question1).not_to receive(:send).with("weight=", anything)
+      expect(@question1).to receive(:save)
+
+      allow(self).to receive(:params).and_return({
+        question: {
+          "1" => { "txt" => "new text", "weight" => "2" }
+        }
+      })
+    
+      update_questionnaire_questions
+    end
+
+    it 'ignores unknown attributes without raising errors' do
+      # Confirms unknown attributes are ignored without errors.
+      allow(@question1).to receive(:send).with("txt").and_return("x")
+      allow(@question1).to receive(:send).with("unknown").and_raise(NoMethodError)
+    
+      allow(@question1).to receive(:send).with("txt=", "y")
+      allow(@question1).to receive(:save)
+    
+      allow(self).to receive(:params).and_return({
+        question: {
+          "1" => { "txt" => "y", "unknown" => "zzz" }
+        }
+      })
+    
+      expect {
+        update_questionnaire_questions
+      }.to raise_error(NoMethodError) # or you can handle it inside the method if needed
+    end
+
+    it 'handles empty attributes for a question gracefully' do
+      # Verifies that empty attributes for a question do not cause errors.
+      allow(@question1).to receive(:send).with("txt").and_return("Old text")
+      allow(@question1).to receive(:send).with("weight").and_return("1")
+      expect(@question1).not_to receive(:send).with(anything)
+      expect(@question1).to receive(:save)
+
+      allow(self).to receive(:params).and_return({
+        question: {
+          "1" => {}
+        }
+      })
+
+      update_questionnaire_questions
+    end
   end
-end
 
-describe '#questionnaire_factory' do
-  before do
-    extend QuestionnaireHelper
+  describe '#questionnaire_factory' do
+    before do
+      extend QuestionnaireHelper
+    end
+
+    it 'returns the correct questionnaire instance for a valid type' do
+      # Ensures the correct questionnaire instance is returned for valid types.
+      instance = questionnaire_factory('ReviewQuestionnaire')
+      expect(instance).to be_a(ReviewQuestionnaire)
+    end
+
+    it 'sets flash error and returns nil for an invalid type' do
+      # Verifies flash error is set and nil is returned for invalid types.
+      flash_hash = {}
+      allow(self).to receive(:flash).and_return(flash_hash)
+
+      result = questionnaire_factory('InvalidType')
+      expect(result).to be_nil
+      expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
+    end
+
+    it 'handles nil or empty type string' do
+      # Confirms nil or empty type strings are handled gracefully.
+      flash_hash = {}
+      allow(self).to receive(:flash).and_return(flash_hash)
+
+      result = questionnaire_factory(nil)
+      expect(result).to be_nil
+      expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
+    end
+
+    it 'returns nil and sets error if type string is downcased or malformed' do
+      # Ensures errors are set for downcased or malformed type strings.
+      flash_hash = {}
+      allow(self).to receive(:flash).and_return(flash_hash)
+
+      result = questionnaire_factory('reviewquestionnaire')
+      expect(result).to be_nil
+      expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
+
+      result = questionnaire_factory(' ReviewQuestionnaire ')
+      expect(result).to be_nil
+      expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
+    end
+
+    it 'returns nil and sets error when QUESTIONNAIRE_MAP is empty' do
+      # Verifies error is set when QUESTIONNAIRE_MAP is empty.
+      stub_const("QuestionnaireHelper::QUESTIONNAIRE_MAP", {})
+
+      flash_hash = {}
+      allow(self).to receive(:flash).and_return(flash_hash)
+
+      result = questionnaire_factory('ReviewQuestionnaire')
+      expect(result).to be_nil
+      expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
+    end
+
+    it 'returns nil and sets error when type is mapped to nil' do
+      # Confirms error is set when type maps to nil in QUESTIONNAIRE_MAP.
+      stub_const("QuestionnaireHelper::QUESTIONNAIRE_MAP", {
+        'InvalidQuestionnaire' => nil
+      })
+
+      flash_hash = {}
+      allow(self).to receive(:flash).and_return(flash_hash)
+
+      result = questionnaire_factory('InvalidQuestionnaire')
+      expect(result).to be_nil
+      expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
+    end
   end
-
-  it 'returns the correct questionnaire instance for a valid type' do
-    # Ensures the correct questionnaire instance is returned for valid types.
-    instance = questionnaire_factory('ReviewQuestionnaire')
-    expect(instance).to be_a(ReviewQuestionnaire)
-  end
-
-  it 'sets flash error and returns nil for an invalid type' do
-    # Verifies flash error is set and nil is returned for invalid types.
-    flash_hash = {}
-    allow(self).to receive(:flash).and_return(flash_hash)
-
-    result = questionnaire_factory('InvalidType')
-    expect(result).to be_nil
-    expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
-  end
-
-  it 'handles nil or empty type string' do
-    # Confirms nil or empty type strings are handled gracefully.
-    flash_hash = {}
-    allow(self).to receive(:flash).and_return(flash_hash)
-
-    result = questionnaire_factory(nil)
-    expect(result).to be_nil
-    expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
-  end
-  end
-
-  it 'returns nil and sets error if type string is downcased or malformed' do
-    # Ensures errors are set for downcased or malformed type strings.
-    flash_hash = {}
-    allow(self).to receive(:flash).and_return(flash_hash)
-
-    result = questionnaire_factory('reviewquestionnaire')
-    expect(result).to be_nil
-    expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
-
-    result = questionnaire_factory(' ReviewQuestionnaire ')
-    expect(result).to be_nil
-    expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
-  end
-
-  it 'returns nil and sets error when QUESTIONNAIRE_MAP is empty' do
-    # Verifies error is set when QUESTIONNAIRE_MAP is empty.
-    stub_const("QuestionnaireHelper::QUESTIONNAIRE_MAP", {})
-
-    flash_hash = {}
-    allow(self).to receive(:flash).and_return(flash_hash)
-
-    result = questionnaire_factory('ReviewQuestionnaire')
-    expect(result).to be_nil
-    expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
-  end
-
-  it 'returns nil and sets error when type is mapped to nil' do
-    # Confirms error is set when type maps to nil in QUESTIONNAIRE_MAP.
-    stub_const("QuestionnaireHelper::QUESTIONNAIRE_MAP", {
-      'InvalidQuestionnaire' => nil
-    })
-
-    flash_hash = {}
-    allow(self).to receive(:flash).and_return(flash_hash)
-
-    result = questionnaire_factory('InvalidQuestionnaire')
-    expect(result).to be_nil
-    expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
-end
 end
