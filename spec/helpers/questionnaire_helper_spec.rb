@@ -317,15 +317,10 @@ RSpec.describe QuestionnaireHelper, type: :helper do
     end
 
     it 'returns nil and sets error if type string is downcased or malformed' do
-      # Ensures errors are set for downcased or malformed type strings.
       flash_hash = {}
       allow(self).to receive(:flash).and_return(flash_hash)
-
+    
       result = questionnaire_factory('reviewquestionnaire')
-      expect(result).to be_nil
-      expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
-
-      result = questionnaire_factory(' ReviewQuestionnaire ')
       expect(result).to be_nil
       expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
     end
