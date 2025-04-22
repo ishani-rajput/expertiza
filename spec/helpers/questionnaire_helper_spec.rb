@@ -1,17 +1,19 @@
 # spec/helpers/questionnaire_helper_spec.rb
 
-# This file contains unit tests for the QuestionnaireHelper module.
-# It ensures that the `get_formatted_question_text` helper method behaves correctly
-# when provided with a mock QuestionnaireQuestion object.
+# This file contains unit tests for the QuestionnaireHelper module in Expertiza.
+# It tests the behavior of key methods: adjust_advice_size, update_questionnaire_questions, and questionnaire_factory.
 
 require 'rails_helper'
 
-# Begin a test suite for the QuestionnaireHelper module.
 # The `type: :helper` metadata ensures we get access to `helper` which includes all the helper methods.
 RSpec.describe QuestionnaireHelper, type: :helper do
   require 'rails_helper'
 
-  # Group tests related to the `get_formatted_question_text` method.
+  # adjust_advice_size ensures each scored question has a complete and valid set of
+  # QuestionAdvice entries—one per score in the questionnaire’s defined range.
+  # It deletes advice with out-of-range scores, removes duplicates, and adds missing ones.
+  #
+  # Each QuestionAdvice stores guidance text linked to a specific score and question. (like a rubric)
   describe '.adjust_advice_size' do
     let(:questionnaire) { double('Questionnaire', min_question_score: 1, max_question_score: 3) }
     let(:question) { double('ScoredQuestion', id: 101, question_advices: []) }
@@ -147,6 +149,10 @@ RSpec.describe QuestionnaireHelper, type: :helper do
     end       
   end
 
+
+  # Updates each question’s attributes based on form input (params[:question]).
+  # Only changed values are updated, and .save is called if any updates occur.
+  # Prevents unnecessary DB writes and ensures user edits are applied correctly.
   describe '#update_questionnaire_questions' do
     before do
       extend QuestionnaireHelper
@@ -214,24 +220,6 @@ RSpec.describe QuestionnaireHelper, type: :helper do
     
       update_questionnaire_questions
     end
-    
-    it 'updates only changed fields and still saves the question' do
-      # Verifies only changed fields are updated, but the question is saved.
-      allow(@question1).to receive(:send).with("txt").and_return("old text")
-      allow(@question1).to receive(:send).with("weight").and_return("2")
-    
-      expect(@question1).to receive(:send).with("txt=", "new text")
-      expect(@question1).not_to receive(:send).with("weight=", anything)
-      expect(@question1).to receive(:save)
-
-      allow(self).to receive(:params).and_return({
-        question: {
-          "1" => { "txt" => "new text", "weight" => "2" }
-        }
-      })
-    
-      update_questionnaire_questions
-    end
 
     it 'ignores unknown attributes without raising errors' do
       # Confirms unknown attributes are ignored without errors.
@@ -261,23 +249,7 @@ RSpec.describe QuestionnaireHelper, type: :helper do
 
       allow(self).to receive(:params).and_return({
         question: {
-          "1" => {}
-        }
-      })
-
-      update_questionnaire_questions
-    end
-    it 'handles empty attributes for a question gracefully' do
-      # Verifies that empty attributes for a question do not cause failures.
-      allow(@question1).to receive(:send).with("txt").and_return("Existing text")
-      allow(@question1).to receive(:send).with("weight").and_return("1")
-      expect(@question1).not_to receive(:send).with("txt=", anything)
-      expect(@question1).not_to receive(:send).with("weight=", anything)
-      expect(@question1).to receive(:save)
-
-      allow(self).to receive(:params).and_return({
-        question: {
-          "1" => {}  # No attributes to update
+          "1" => {} # No attributes to update
         }
       })
 
@@ -285,6 +257,9 @@ RSpec.describe QuestionnaireHelper, type: :helper do
     end
   end
 
+  # questionnaire_factory creates a new questionnaire object based on the given type string.
+  # It uses QUESTIONNAIRE_MAP to map the type to a class and returns a new instance.
+  # If the type is invalid or unmapped, it sets a flash error and returns nil.
   describe '#questionnaire_factory' do
     before do
       extend QuestionnaireHelper
@@ -347,16 +322,6 @@ RSpec.describe QuestionnaireHelper, type: :helper do
       allow(self).to receive(:flash).and_return(flash_hash)
 
       result = questionnaire_factory('InvalidQuestionnaire')
-      expect(result).to be_nil
-      expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
-    end
-
-    it 'returns nil and sets error when type is a valid string but not in QUESTIONNAIRE_MAP' do
-      # Verifies that a valid string not present in QUESTIONNAIRE_MAP results in an error.
-      flash_hash = {}
-      allow(self).to receive(:flash).and_return(flash_hash)
-
-      result = questionnaire_factory('NonExistentQuestionnaire')
       expect(result).to be_nil
       expect(flash_hash[:error]).to eq('Error: Undefined Questionnaire')
     end
